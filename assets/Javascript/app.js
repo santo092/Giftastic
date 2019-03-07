@@ -1,41 +1,105 @@
-var giffy = ["The Matrix", "The Notebook", "Mr. Nobody", "The Lion King"];
+function giffy() {
 
-var queryURL = "https://api.giphy.com/v1/gifs/trending?api_key=dc6zaTOxFJmzC&limit=5";
+  var apiKey = "TsBvcueNjMvDKeLSVCWCPC6xQnKmyM8g";
+  var searchTerm = $(this).attr("data-title");
+  console.log(searchTerm);
+  var queryUrl = "http://api.giphy.com/v1/gifs/search?q=" + searchTerm + "&api_key="
+    + apiKey + "&limit=25&rating=PG-13&lang=en";
 
-
-
-function displayGif() {
-  $.ajax({ url: queryURL, method: "GET" })
+  $.ajax({ url: queryUrl, method: "GET" })
     .then(function (response) {
-      var imageUrl = response.data.image_original_url;
-      var gifImage = $("<img>");
-      gifImage.attr("src", imageUrl);
-      $("#images").prepend(gifImage);
-      console.log(response);
-    })
+      $("#gif-holder").empty();
+
+      for (var i = 0; i < response.data.length; i++) {
+
+        var p = $("<p>");
+        p.text("Rated: " + response.data[i].rating);
+
+        var img = $("<img>");
+        img.attr('src', response.data[i].images.fixed_height_still.url);
+        $("#gif-holder").append(p, img);
+
+      }
+
+      for (var i in response.data) {
+      
+        var responseElem = response.data[i];
+
+        img = $("<img>");
+
+        img.attr({
+          "src": responseElem.images.original_still.url,
+          "data-still": responseElem.images.original_still.url,
+          "data-animate": responseElem.images.original.url,
+          "data-state": "still",
+          "class": "gif"
+        });
+
+        $("#gif-holder img").on("click", function (event) {
+          console.log(img.attr("data-state"))
+          event.preventDefault();
+       
+          var state = $(this).attr("data-state");
+
+          if (state === "still") {
+
+            var newSrc = $(this).attr("data-animate");
+            $(this).attr("src", newSrc);
+            $(this).attr("data-state", "animate");
+
+          } else {
+            var newSrc = $(this).attr("data-still");
+            $(this).attr("src", newSrc);
+            $(this).attr("data-state", "still");
+          }
+
+        })
+      }
+    }
+
+    )
 }
-function renderButtons() {
-    $("#buttons-view").empty();
 
-  // Looping through the array of movies
-  for (var i = 0; i < giffy.length; i++) {
+var topics = ["Friends", "The Office","That 70's Show","Dexter",
+"Chuck", "Lost", "Seinfeld","Breaking Bad", "Spongebob", "The Walking Dead"];
 
-    giffy[i]= $("<button>");
-     $("#buttons-view").append(giffy[i]);
+function makeButtons() {
+  $("#buttons").empty();
+
+  for (var i = 0; i < topics.length; i++) {
+    var button = $("<button>");
+    button.text(topics[i]);
+    button.attr("data-title", topics[i]);
+    button.addClass("btn-made");
+
+    $("#buttons").append(button)
+
+
   }
 }
+
+makeButtons();
+
+//add #gif-input to topics
 $("#add-gif").on("click", function (event) {
+
   event.preventDefault();
+
+  $("#gif-input").empty();
+
   var gif = $("#gif-input").val().trim();
+  topics.push(gif);
 
-  giffy.push(gif);
-  console.log(giffy);
+  
+  makeButtons();
 
-  renderButtons();
-});
+})
 
-$("#add-gif").on("click", displayGif)
 
-// Calling the renderButtons function to display the initial buttons
-renderButtons();
+
+
+$(document).on("click", ".btn-made", giffy);
+
+
+
 
